@@ -34,6 +34,7 @@ jobs:
 
       - name: Deploy to PaaS
         env:
+          ENVIRONMENT: production
           # Parse app name from manifest to ensure it matches up
           APP_NAME: $(APP_NAME=$(ruby -e "require 'yaml'; config = YAML.load_file('manifest.yml'); puts config['applications'][0]['name']")
         run: |
