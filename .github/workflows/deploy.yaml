@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+# Deploy the Design System to production when the master branch is changed
+# Github Actions is not involved in deploying PR or branch previews – these are handled by Netlify
+
+jobs:
+  deploy:
+    needs: run-build
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install the CF CLI
+        run: |
+          wget https://s3-us-west-1.amazonaws.com/v7-cf-cli-releases/releases/v7.2.0/cf7-cli-installer_7.2.0_x86-64.deb
+          sudo dpkg -i cf7-cli-installer_7.2.0_x86-64.deb
+
+      - name: Authenticate
+        env:
+          CF_API: "https://api.cloud.service.gov.uk"
+          CF_ORG: "govuk-design-system"
+          CF_SPACE: "design-system"
+          CF_USERNAME: "design-system-deploy+design-system@digital.cabinet-office.gov.uk"
+          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
+        run: |
+          echo "Logging into $CF_ORG/$CF_SPACE..."
+          cf api "${CF_API}"
+          cf auth
+          cf target -o "${CF_ORG}" -s "${CF_SPACE}"
+
+      - name: Deploy to PaaS
+        env:
+          # Parse app name from manifest to ensure it matches up
+          APP_NAME: $(APP_NAME=$(ruby -e "require 'yaml'; config = YAML.load_file('manifest.yml'); puts config['applications'][0]['name']")
+        run: |
+          echo "Deploying $APP_NAME to $CF_ORG/$CF_SPACE..."
+          cf push $APP_NAME --strategy rolling
+          cf logout
+
+      - name: Smoke Test
+        run: |
+          echo "Running smoke tests against https://design-system.service.gov.uk/"
+          grep -q "Tweet tweet" <<< "$(curl -sL "https://design-system.service.gov.uk/__canary__/")"
+
+
