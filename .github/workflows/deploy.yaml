@@ -1,8 +1,6 @@
 name: Deploy
 
-on:
-  push:
-    branches: [master]
+on: [push, pull_request]
 
 # Deploy the Design System to production when the master branch is changed
 # Github Actions is not involved in deploying PR or branch previews – these are handled by Netlify
@@ -40,16 +38,6 @@ jobs:
           cf api "${CF_API}"
           cf auth
           cf target -o "${CF_ORG}" -s "${CF_SPACE}"
-
-      - name: Deploy to PaaS
-        env:
-          ENVIRONMENT: production
-          # Parse app name from manifest to ensure it matches up
-          APP_NAME: $(APP_NAME=$(ruby -e "require 'yaml'; config = YAML.load_file('manifest.yml'); puts config['applications'][0]['name']")
-        run: |
-          echo "Deploying $APP_NAME to $CF_ORG/$CF_SPACE..."
-          cf push $APP_NAME --strategy rolling
-          cf logout
 
       - name: Smoke Test
         run: |
