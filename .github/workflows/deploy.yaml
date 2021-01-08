@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+
+      - name: Download build artefact
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+
       - name: Install the CF CLI
         run: |
           wget https://s3-us-west-1.amazonaws.com/v7-cf-cli-releases/releases/v7.2.0/cf7-cli-installer_7.2.0_x86-64.deb
