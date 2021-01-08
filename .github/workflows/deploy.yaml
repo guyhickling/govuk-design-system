@@ -1,6 +1,10 @@
 name: Deploy
 
-on: [push, pull_request]
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
 
 # Deploy the Design System to production when the master branch is changed
 # Github Actions is not involved in deploying PR or branch previews – these are handled by Netlify
