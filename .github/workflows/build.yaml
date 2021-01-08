@@ -27,3 +27,9 @@ jobs:
 
     - name: Lint and test
       run: npm test -- --runInBand
+
+    - name: Upload artefact
+      uses: actions/upload-artifact@v2
+      with:
+          name: build
+          path: deploy/**
